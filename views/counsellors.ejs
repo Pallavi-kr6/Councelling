@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Counsellors</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      background: #f4f6f9;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      background: #2c3e50;
+      color: #fff;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .sidebar .profile-pic {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #34495e;
+      margin-bottom: 15px;
+    }
+
+    .sidebar h3, .sidebar p {
+      margin: 5px 0;
+      text-align: center;
+    }
+
+    .sidebar a {
+      display: block;
+      margin-top: 15px;
+      padding: 10px;
+      text-decoration: none;
+      background: #1abc9c;
+      color: white;
+      border-radius: 5px;
+      text-align: center;
+    }
+
+    .sidebar a:hover {
+      background: #16a085;
+    }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .header {
+      background: #fff;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .header p {
+      margin: 5px 0 0;
+      color: #555;
+    }
+
+    /* Counsellor card */
+    .counsellor {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+
+    .counsellor:hover {
+      transform: translateY(-2px);
+    }
+
+    .counsellor h3 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+
+    .counsellor p {
+      margin: 5px 0;
+      color: #333;
+    }
+
+    select, button {
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #aaa;
+      font-size: 14px;
+    }
+
+    button {
+      background: #007BFF;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="profile-pic"></div>
+    <h3><%= user ? user.name : "Guest" %></h3>
+    <p><%= user ? user.email : "" %></p>
+    <a href="/home">Home</a>
+    <a href="/counsellors">Find a Counsellor</a>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="header">
+      <h1>Available Counsellors</h1>
+      <p>Choose a slot and book your counsellor</p>
+    </div>
+
+    <% if (counsellors && counsellors.length > 0) { %>
+      <% counsellors.forEach(c => { %>
+        <div class="counsellor">
+          <h3><%= c.name %></h3>
+          <p><strong>Category:</strong> <%= c.category %></p>
+          <p><strong>Contact:</strong> <%= c.contact %></p>
+
+          <form action="/counsellors/book" method="POST">
+            <input type="hidden" name="id" value="<%= c.id %>">
+            
+            <label for="slot-<%= c.id %>"><strong>Choose a slot:</strong></label>
+            <select id="slot-<%= c.id %>" name="slot" required>
+              <% c.slots.forEach(slot => { %>
+                <option value="<%= slot %>"><%= slot %></option>
+              <% }) %>
+            </select>
+
+            <button type="submit" <%= c.booked ? "disabled" : "" %>>
+              <%= c.booked ? "Booked" : "Book Now" %>
+            </button>
+          </form>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <p>No counsellors available right now.</p>
+    <% } %>
+  </div>
+
+</body>
+</html>

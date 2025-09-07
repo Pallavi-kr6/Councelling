@@ -118,10 +118,11 @@ exports.login = async (req, res) => {
     }
 
     // 2. Store user in session
-    req.session.user = user;
+req.session.user = user;
 
-    // 3. Redirect/render home page
-    res.render("home", { user });
+// Pass the booked counsellor (if any) to EJS
+    res.redirect("/home");
+
 
   } catch (err) {
     console.error(err);

@@ -1,0 +1,40 @@
+[
+  {
+    "id": 1,
+    "name": "Dr. Alice Smith",
+    "category": "Career Counselling",
+    "slots": [
+      "10:00 AM",
+      "2:00 PM",
+      "4:00 PM"
+    ],
+    "contact": "alice@example.com",
+    "booked": true,
+    "selectedSlot": "10:00 AM"
+  },
+  {
+    "id": 2,
+    "name": "Mr. John Doe",
+    "category": "Academic Counselling",
+    "slots": [
+      "11:00 AM",
+      "3:00 PM"
+    ],
+    "contact": "john@example.com",
+    "booked": true,
+    "selectedSlot": "11:00 AM"
+  },
+  {
+    "id": 3,
+    "name": "Ms. Clara Brown",
+    "category": "Mental Health",
+    "slots": [
+      "9:00 AM",
+      "1:00 PM",
+      "5:00 PM"
+    ],
+    "contact": "clara@example.com",
+    "booked": true,
+    "selectedSlot": "9:00 AM"
+  }
+]
