@@ -4,10 +4,16 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+
   otp: { type: String },
   otpExpiry: { type: Date },   // OTP valid for 5 minutes
-  isVerified: { type: Boolean, default: false }
+  isVerified: { type: Boolean, default: false },
+   year: { type: Number, required: true },       // e.g., 1, 2, 3, 4
+  course: { type: String, required: true },  
+  bookedCounsellors: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "counsellors" }
+  ]
 });
 
-const User = mongoose.model("Users", userSchema);
+const User = mongoose.model("User", userSchema);
 module.exports = User;

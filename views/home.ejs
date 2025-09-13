@@ -2,54 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Student Counselling App</title>
+  <title>Home</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    // Tailwind dark mode config
-    tailwind.config = {
-      darkMode: 'class'
-    }
-
-    function toggleDarkMode() {
-      document.documentElement.classList.toggle('dark');
-      // Optionally save preference in localStorage
-      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-    }
-
-    // Load saved preference
-    if (localStorage.getItem('theme') === 'dark') {
-      document.documentElement.classList.add('dark');
-    }
-  </script>
 </head>
-<body class="flex min-h-screen font-sans bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+<body class="flex min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 
-  <!-- Sidebar -->
-  <aside class="fixed w-64 h-full bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white flex flex-col items-center py-8 px-4 shadow-lg">
-    <div class="w-24 h-24 bg-gray-300 dark:bg-gray-700 rounded-full mb-4 flex items-center justify-center text-4xl font-bold shadow-inner text-gray-900 dark:text-white">
-      👤
-    </div>
-    <h3 class="text-xl font-semibold mb-1 text-center"><%= user ? user.name : "Guest" %></h3>
-    <p class="text-sm mb-4 text-center text-gray-600 dark:text-gray-400"><%= user ? user.email : "" %></p>
-    
-    <button onclick="toggleDarkMode()" class="w-full bg-gray-400 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 py-2 rounded mb-3 transition-all shadow text-gray-900 dark:text-white">Change Mode</button>
-
-    <a href="/home" class="w-full text-center bg-blue-600 hover:bg-blue-500 dark:bg-blue-700 dark:hover:bg-blue-600 py-2 rounded mb-3 transition-all shadow text-white">Home</a>
-    <a href="/counsellors" class="w-full text-center bg-green-600 hover:bg-green-500 dark:bg-green-700 dark:hover:bg-green-600 py-2 rounded transition-all shadow text-white">Find a Counsellor</a>
-  </aside>
+  <!-- Include Navbar + AI -->
+  <%- include("partials/navbar") %>
 
   <!-- Main content -->
   <main class="flex-1 ml-0 md:ml-64 p-6 md:p-10">
-    <!-- Header -->
     <header class="bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md p-6 mb-8 transition-colors duration-300">
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Student Counselling App</h1>
-      <p class="text-gray-700 dark:text-gray-300 mt-2 text-lg">
-        How are you feeling today, <span class="text-teal-500 dark:text-teal-400 font-semibold"><%= user ? user.name : "Guest" %></span>?
-      </p>
+      <h1 class="text-2xl font-bold">Student Councelling</h1>
+      <h2 class="text-xl font-semibold">How are you feeling, <%= user ? user.name : "Guest" %>?</h2>
     </header>
-
-    <!-- Booked Counsellors Section -->
-    <section>
+       <section>
       <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Booked Counsellors</h2>
 
       <% if (counsellors && counsellors.length > 0 && counsellors.some(c => c.booked)) { %>
@@ -62,9 +29,20 @@
               </div>
               <p class="text-gray-700 dark:text-gray-300 mb-1"><strong>Category:</strong> <%= c.category %></p>
               <p class="text-gray-700 dark:text-gray-300 mb-1"><strong>Slot:</strong> <%= c.selectedSlot %></p>
-              <p class="text-gray-700 dark:text-gray-300 mb-1"><strong>Contact:</strong> <%= c.contact %></p>
+              <p class="text-gray-700 dark:text-gray-300 mb-1"><strong>Email:</strong> <%= c.email %></p>
+            <form action="/counsellors/attended" method="POST">
+  <input type="hidden" name="id" value="<%= c._id %>">
+  <button 
+    type="submit" 
+    class="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+    Session Attended
+  </button>
+</form>
+
             </div>
+          
           <% }) %>
+           
         </div>
       <% } else { %>
         <p class="text-gray-500 dark:text-gray-400 text-lg">You haven't booked any counsellors yet.</p>
@@ -72,5 +50,66 @@
     </section>
   </main>
 
+  <!-- Scripts -->
+  <script>
+    // Dark mode toggle
+window.toggleDarkMode = function () {
+  const isDark = document.documentElement.classList.toggle("dark");
+  localStorage.setItem("theme", isDark ? "dark" : "light");
+};
+
+
+// Run this once on page load to apply saved theme
+(function applySavedTheme() {
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "dark") {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
+})();
+
+
+    // Chatbot toggle
+    function toggleChat() {
+      const chatBox = document.getElementById('chatbox');
+      chatBox.classList.toggle('hidden');
+    }
+
+    // Chatbot message handling
+    async function sendMessage() {
+      const input = document.getElementById("chat-input");
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      const chatContent = document.getElementById("chat-content");
+      chatContent.innerHTML += `
+        <div class="text-right mb-2">
+          <span class="inline-block bg-blue-600 text-white px-3 py-1 rounded-xl">${msg}</span>
+        </div>`;
+      input.value = "";
+      chatContent.scrollTop = chatContent.scrollHeight;
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: msg }),
+        });
+
+        const data = await response.json();
+        chatContent.innerHTML += `
+          <div class="text-left mb-2">
+            <span class="inline-block bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-1 rounded-xl">
+              ${data.reply || "⚠️ No reply received."}
+            </span>
+          </div>`;
+        chatContent.scrollTop = chatContent.scrollHeight;
+      } catch (err) {
+        chatContent.innerHTML += `<div class="text-left mb-2 text-red-500">Error: Could not get response</div>`;
+        console.error(err);
+      }
+    }
+  </script>
 </body>
 </html>

@@ -1,11 +1,13 @@
 const express = require('express');
 const app = express();
+require('dotenv').config();
 const session = require('express-session');
 const connectDB = require('./config/db');
 const path = require('path');
-const counsellorRoutes = require('./routes/counsellorRoutes'); // make sure path is correct
+const counsellorRoutes = require('./routes/counsellorRoutes'); 
 const authRoutes = require('./routes/authRoutes');
 const counsellorController = require("./controllers/counsellorController");
+const chatRoutes = require("./routes/chatRoutes");
 // Connect to MongoDB
 connectDB();
 
@@ -33,6 +35,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', authRoutes);
 app.use('/counsellors', counsellorRoutes);
 app.get("/home", counsellorController.getHome);
+app.use("/api", chatRoutes);
+// app.use("/", counsellorRoutes);
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

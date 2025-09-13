@@ -18,30 +18,54 @@ const generateOTP = () => crypto.randomInt(100000, 999999).toString();
 // ---------------- REGISTER ----------------
 exports.register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, year, course } = req.body;
 
-    let user = await User.findOne({ email });
-    if (user) return res.status(400).json({ msg: "User already exists" });
+    if (!year || !course) {
+      return res.render("signup", { error: "Please select year and course", success: null });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+
+    let user = await User.findOne({ email: normalizedEmail });
+    if (user) {
+      if (user.isVerified) {
+        return res.render("login", { error: "User already exists. Please log in.", success: null });
+      } else {
+        return res.render("verify", { error: "User already exists but not verified. Please verify your email.", success: null });
+      }
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const otp = generateOTP();
     const otpExpiry = Date.now() + 5 * 60 * 1000;
 
-    user = new User({ name, email, password: hashedPassword, otp, otpExpiry });
+    user = new User({
+      name,
+      email: normalizedEmail,
+      password: hashedPassword,
+      otp,
+      otpExpiry,
+      year,
+      course
+    });
+
     await user.save();
 
     await transporter.sendMail({
       from: 'pk2239@srmist.edu.in',
-      to: email,
+      to: normalizedEmail,
       subject: 'Verify your email',
       text: `Your OTP is ${otp}. It is valid for 5 minutes.`
     });
 
-    res.status(201).json({ msg: "User registered. Please verify your email." });
+    res.render("verify", { success: "Registration successful. Please verify your email.", error: null });
+
   } catch (err) {
-    res.status(500).json({ msg: "Server error", error: err.message });
+    console.error(err);
+    res.status(500).render("signup", { error: "Server error. Please try again.", success: null });
   }
 };
+
 
 // ---------------- VERIFY OTP ----------------
 exports.verifyOTP = async (req, res) => {
@@ -49,8 +73,8 @@ exports.verifyOTP = async (req, res) => {
     const { email, otp } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ msg: "User not found" });
-    if (user.isVerified) return res.status(400).json({ msg: "User already verified" });
+    if (!user) return res.render("verify", { error: "User not found", success: null });
+    if (user.isVerified) return res.render("login", { error: "User already verified. Please log in.", success: null });
 
     if (user.otp !== otp) return res.status(400).json({ msg: "Invalid OTP" });
     if (Date.now() > user.otpExpiry) return res.status(400).json({ msg: "OTP expired" });
@@ -60,7 +84,7 @@ exports.verifyOTP = async (req, res) => {
     user.otpExpiry = null;
     await user.save();
 
-    res.status(200).json({ msg: "Email verified successfully" });
+   res.render("login", { success: "Email verified successfully. Please log in." });
   } catch (err) {
     res.status(500).json({ msg: "Error verifying OTP", error: err.message });
   }
@@ -72,8 +96,8 @@ exports.resendOTP = async (req, res) => {
     const { email } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'User not found' });
-    if (user.isVerified) return res.status(400).json({ message: 'User already verified' });
+    if (!user) return res.render("signup", { error: "User not found. Please sign up.", success: null });
+    if (user.isVerified) return res.render("login", { error: "User already verified. Please log in.", success: null });
 
     const otp = generateOTP();
     user.otp = otp;
