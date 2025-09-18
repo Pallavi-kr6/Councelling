@@ -4,17 +4,20 @@ require('dotenv').config();
 const session = require('express-session');
 const connectDB = require('./config/db');
 const path = require('path');
-const counsellorRoutes = require('./routes/counsellorRoutes'); 
-const authRoutes = require('./routes/authRoutes');
-const counsellorController = require("./controllers/counsellorController");
-const chatRoutes = require("./routes/chatRoutes");
+const counsellorRoutes = require('./routes/User/counsellorRoutes'); 
+const authRoutes = require('./routes/User/authRoutes');
+const counsellorController = require("./controllers/User/counsellorController");
+const chatRoutes = require("./routes/User/chatRoutes");
+const counsellorAuthRoutes = require("./routes/Counsellor/counsellorRoutes");
+
+
 // Connect to MongoDB
 connectDB();
 
 // Set EJS as templating engine
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
 
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 // Middleware to parse form data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -36,6 +39,7 @@ app.use('/', authRoutes);
 app.use('/counsellors', counsellorRoutes);
 app.get("/home", counsellorController.getHome);
 app.use("/api", chatRoutes);
+app.use("/counsellor", counsellorAuthRoutes);
 // app.use("/", counsellorRoutes);
 // Start server
 const PORT = process.env.PORT || 3000;

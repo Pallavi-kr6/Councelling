@@ -14,6 +14,10 @@ const counsellorSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    password: {                 // ✅ add password for login
+      type: String,
+      required: true,
+    },
     qualifications: {
       type: String,
       required: true,
@@ -26,7 +30,7 @@ const counsellorSchema = new mongoose.Schema(
     },
     slots: [
       {
-        type: String, // store as "HH:MM" format or you can change to Date if needed
+        type: String, // "HH:MM"
         required: true,
       },
     ],
@@ -48,9 +52,7 @@ const counsellorSchema = new mongoose.Schema(
       default: false,
     },
   },
-  {
-    timestamps: true, // adds createdAt and updatedAt automatically
-  }
+  { timestamps: true }
 );
 
 const Counsellor = mongoose.model('Counsellor', counsellorSchema);

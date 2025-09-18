@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify OTP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Verify Email</h2>
+
+        <!-- OTP Verification Form -->
+        <form action="/verify-otp" method="POST" class="space-y-4">
+            <div>
+                <label for="email" class="block text-gray-700 font-medium mb-2">Email address</label>
+                <input type="email" id="email" name="email" required
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div>
+                <label for="otp" class="block text-gray-700 font-medium mb-2">Enter OTP</label>
+                <input type="text" id="otp" name="otp" required
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300 font-medium">
+                Verify OTP
+            </button>
+        </form>
+
+        <!-- Resend OTP -->
+        <form action="/api/auth/resend-otp" method="POST" class="mt-4 text-center">
+            <input type="hidden" name="email" id="resendEmail">
+            <button type="submit" class="text-blue-600 hover:underline font-medium">
+                Resend OTP
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Copy email from first form into resend form
+        const emailInput = document.getElementById('email');
+        const resendEmailInput = document.getElementById('resendEmail');
+        emailInput.addEventListener('input', () => {
+            resendEmailInput.value = emailInput.value;
+        });
+    </script>
+</body>
+</html>

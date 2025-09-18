@@ -1,7 +1,10 @@
-const User = require('../models/user');
+const User = require('../../models/user');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
+const Counsellor = require('../../models/counsellor');  // ✅ Model
+
+
 
 // setup transporter
 const transporter = nodemailer.createTransport({
@@ -18,10 +21,10 @@ const generateOTP = () => crypto.randomInt(100000, 999999).toString();
 // ---------------- REGISTER ----------------
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, year, course } = req.body;
+    const { name, email, password, year, course, Instagram } = req.body; // ✅ include Instagram
 
     if (!year || !course) {
-      return res.render("signup", { error: "Please select year and course", success: null });
+      return res.render("User/signup", { error: "Please select year and course", success: null });
     }
 
     const normalizedEmail = email.toLowerCase();
@@ -29,9 +32,9 @@ exports.register = async (req, res) => {
     let user = await User.findOne({ email: normalizedEmail });
     if (user) {
       if (user.isVerified) {
-        return res.render("login", { error: "User already exists. Please log in.", success: null });
+        return res.render("User/login", { error: "User already exists. Please log in.", success: null });
       } else {
-        return res.render("verify", { error: "User already exists but not verified. Please verify your email.", success: null });
+        return res.render("User/verify", { error: "User already exists but not verified. Please verify your email.", success: null });
       }
     }
 
@@ -46,7 +49,8 @@ exports.register = async (req, res) => {
       otp,
       otpExpiry,
       year,
-      course
+      course,
+      Instagram   // ✅ save it to DB
     });
 
     await user.save();
@@ -58,11 +62,11 @@ exports.register = async (req, res) => {
       text: `Your OTP is ${otp}. It is valid for 5 minutes.`
     });
 
-    res.render("verify", { success: "Registration successful. Please verify your email.", error: null });
+    res.render("User/verify", { success: "Registration successful. Please verify your email.", error: null });
 
   } catch (err) {
     console.error(err);
-    res.status(500).render("signup", { error: "Server error. Please try again.", success: null });
+    res.status(500).render("User/signup", { error: "Server error. Please try again.", success: null });
   }
 };
 
@@ -73,8 +77,8 @@ exports.verifyOTP = async (req, res) => {
     const { email, otp } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.render("verify", { error: "User not found", success: null });
-    if (user.isVerified) return res.render("login", { error: "User already verified. Please log in.", success: null });
+    if (!user) return res.render("User/verify", { error: "User not found", success: null });
+    if (user.isVerified) return res.render("User/login", { error: "User already verified. Please log in.", success: null });
 
     if (user.otp !== otp) return res.status(400).json({ msg: "Invalid OTP" });
     if (Date.now() > user.otpExpiry) return res.status(400).json({ msg: "OTP expired" });
@@ -84,7 +88,7 @@ exports.verifyOTP = async (req, res) => {
     user.otpExpiry = null;
     await user.save();
 
-   res.render("login", { success: "Email verified successfully. Please log in." });
+   res.render("User/login", { success: "Email verified successfully. Please log in." });
   } catch (err) {
     res.status(500).json({ msg: "Error verifying OTP", error: err.message });
   }
@@ -96,8 +100,8 @@ exports.resendOTP = async (req, res) => {
     const { email } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.render("signup", { error: "User not found. Please sign up.", success: null });
-    if (user.isVerified) return res.render("login", { error: "User already verified. Please log in.", success: null });
+    if (!user) return res.render("User/signup", { error: "User not found. Please sign up.", success: null });
+    if (user.isVerified) return res.render("User/login", { error: "User already verified. Please log in.", success: null });
 
     const otp = generateOTP();
     user.otp = otp;
@@ -125,32 +129,32 @@ exports.login = async (req, res) => {
     // 1. Find user by email
     const user = await User.findOne({ email });
 
-    // If no user found
     if (!user) {
-      return res.render("login", { error: "User not found" });
+      return res.render("User/login", { error: "User not found" });
     }
 
-    // If not verified
     if (!user.isVerified) {
-      return res.render("verify", { error: "Please verify your email" });
+      return res.render("User/verify", { error: "Please verify your email" });
     }
 
-    // Check password
+    // 2. Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.render("login", { error: "Invalid credentials" });
+      return res.render("User/login", { error: "Invalid credentials" });
     }
 
-    // 2. Store user in session
-req.session.user = user;
+    // 3. Store user in session
+    req.session.user = user;
 
-// Pass the booked counsellor (if any) to EJS
-    res.redirect("/home");
+    // 4. Fetch counsellors from DB
+    const counsellors = await Counsellor.find();
 
+    // 5. Pass both user + counsellors to EJS
+    res.render("User/home", { user: req.session.user, counsellors });
 
   } catch (err) {
     console.error(err);
-    res.status(500).render("login", { error: "Server error, please try again" });
+    res.status(500).render("User/login", { error: "Server error, please try again" });
   }
 };
 

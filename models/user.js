@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  Instagram:{type:String},
   password: { type: String, required: true },
 
   otp: { type: String },
@@ -11,7 +12,7 @@ const userSchema = new mongoose.Schema({
    year: { type: Number, required: true },       // e.g., 1, 2, 3, 4
   course: { type: String, required: true },  
   bookedCounsellors: [
-    { type: mongoose.Schema.Types.ObjectId, ref: "counsellors" }
+    { type: mongoose.Schema.Types.ObjectId, ref: "Counsellor" }
   ]
 });
 

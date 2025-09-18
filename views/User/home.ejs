@@ -8,7 +8,8 @@
 <body class="flex min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 
   <!-- Include Navbar + AI -->
-  <%- include("partials/navbar") %>
+  <%- include("../partials/navbar") %>
+
 
   <!-- Main content -->
   <main class="flex-1 ml-0 md:ml-64 p-6 md:p-10">
@@ -17,37 +18,42 @@
       <h2 class="text-xl font-semibold">How are you feeling, <%= user ? user.name : "Guest" %>?</h2>
     </header>
        <section>
-      <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Booked Counsellors</h2>
+  <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Your Booked Counsellors</h2>
 
-      <% if (counsellors && counsellors.length > 0 && counsellors.some(c => c.booked)) { %>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <% counsellors.filter(c => c.booked).forEach(c => { %>
-            <div class="bg-gray-100 dark:bg-gray-800 rounded-xl shadow-lg p-6 hover:scale-105 transform transition duration-300">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white"><%= c.name %></h3>
-                <span class="bg-green-600 text-white text-sm px-2 py-1 rounded-full font-semibold">Booked</span>
-              </div>
-              <p class="text-gray-700 dark:text-gray-300 mb-1"><strong>Category:</strong> <%= c.category %></p>
-              <p class="text-gray-700 dark:text-gray-300 mb-1"><strong>Slot:</strong> <%= c.selectedSlot %></p>
-              <p class="text-gray-700 dark:text-gray-300 mb-1"><strong>Email:</strong> <%= c.email %></p>
-            <form action="/counsellors/attended" method="POST">
-  <input type="hidden" name="id" value="<%= c._id %>">
-  <button 
-    type="submit" 
-    class="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-    Session Attended
-  </button>
-</form>
+  <% 
+    const myBooked = counsellors.filter(c => 
+      c.booked && c.bookedBy && user && c.bookedBy._id.toString() === user._id.toString()
+    ); 
+  %>
 
-            </div>
-          
-          <% }) %>
-           
+  <% if (myBooked.length > 0) { %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% myBooked.forEach(c => { %>
+        <div class="bg-gray-100 dark:bg-gray-800 rounded-xl shadow-lg p-6 hover:scale-105 transform transition duration-300">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white"><%= c.name %></h3>
+            <span class="bg-green-600 text-white text-sm px-2 py-1 rounded-full font-semibold">Booked</span>
+          </div>
+          <p class="text-gray-700 dark:text-gray-300 mb-1"><strong>Specialization:</strong> <%= c.specialization %></p>
+          <p class="text-gray-700 dark:text-gray-300 mb-1"><strong>Slot:</strong> <%= c.selectedSlot %></p>
+          <p class="text-gray-700 dark:text-gray-300 mb-1"><strong>Email:</strong> <%= c.email %></p>
+
+          <form action="/counsellors/attended" method="POST">
+            <input type="hidden" name="id" value="<%= c._id %>">
+            <button 
+              type="submit" 
+              class="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+              Session Attended
+            </button>
+          </form>
         </div>
-      <% } else { %>
-        <p class="text-gray-500 dark:text-gray-400 text-lg">You haven't booked any counsellors yet.</p>
-      <% } %>
-    </section>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">You haven't booked any counsellors yet.</p>
+  <% } %>
+</section>
+
   </main>
 
   <!-- Scripts -->

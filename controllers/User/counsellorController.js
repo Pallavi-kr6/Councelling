@@ -1,5 +1,6 @@
-const Counsellor = require("../models/counsellor");
-const User = require("../models/user");
+const Counsellor = require('../../models/counsellor');
+
+const User = require("../../models/user");
 
 // ------------------------------
 // Helper to ensure user is logged in
@@ -26,7 +27,7 @@ exports.getCounsellors = async (req, res) => {
       bookedCounsellorIds = user?.bookedCounsellors?.map(String) || [];
     }
 
-    res.render("counsellors", {
+    res.render("User/counsellors", {
       counsellors,
       bookedCounsellorIds,
       user: req.session.user || null,
@@ -69,27 +70,50 @@ exports.bookCounsellor = async (req, res) => {
 // ------------------------------
 // Home route
 // ------------------------------
+// ------------------------------
+// Home route
+// ------------------------------
 exports.getHome = async (req, res) => {
   try {
+    // Fetch logged-in user with booked counsellors
+    const user = await User.findById(req.session.user._id)
+      .populate("bookedCounsellors");
+
+    // Fetch all counsellors for listing
     const counsellors = await Counsellor.find();
-    res.render("home", { counsellors, user: req.session.user || null });
+
+    res.render("User/home", {
+      user,
+      counsellors,
+      bookedCounsellors: user?.bookedCounsellors || []
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Error retrieving counsellors");
   }
 };
 
+
+// ------------------------------
+// Counsellor Dashboard
+// ------------------------------
 // ------------------------------
 // Counsellor Dashboard
 // ------------------------------
 exports.getCounsellorDashboard = async (req, res) => {
   try {
     const counsellorId = req.params.id;
-    const counsellor = await Counsellor.findById(counsellorId);
+
+    // Fetch counsellor and the user who booked them
+    const counsellor = await Counsellor.findById(counsellorId)
+      .populate("bookedBy"); // bookedBy is a User reference
 
     if (!counsellor) return res.status(404).send("Counsellor not found");
 
-    res.render("counsellorDashboard", { counsellor });
+    res.render("User/counsellorDashboard", {
+      counsellor,
+      bookedBy: counsellor.bookedBy || null
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Server Error");
