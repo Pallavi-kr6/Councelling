@@ -28,29 +28,36 @@ const counsellorSchema = new mongoose.Schema(
       enum: ["stress", "academics", "career", "relationships"],
       required: true,
     },
+    // Weekly schedule - each day can have multiple time slots
+    weeklySchedule: {
+      monday: [{
+        type: String, // "HH:MM" format
+      }],
+      tuesday: [{
+        type: String,
+      }],
+      wednesday: [{
+        type: String,
+      }],
+      thursday: [{
+        type: String,
+      }],
+      friday: [{
+        type: String,
+      }],
+      saturday: [{
+        type: String,
+      }],
+      sunday: [{
+        type: String,
+      }],
+    },
+    // Keep old slots field for backward compatibility (will be deprecated)
     slots: [
       {
         type: String, // "HH:MM"
-        required: true,
       },
     ],
-    booked: {
-      type: Boolean,
-      default: false,
-    },
-    selectedSlot: {
-      type: String,
-      default: null,
-    },
-    bookedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      default: null,
-    },
-    attended: {
-      type: Boolean,
-      default: false,
-    },
   },
   { timestamps: true }
 );

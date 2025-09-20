@@ -1,12 +1,16 @@
 const Counsellor = require('../../models/counsellor');
-
 const User = require("../../models/user");
+const Booking = require("../../models/Booking");
 
 // ------------------------------
 // Helper to ensure user is logged in
 // ------------------------------
 const ensureLoggedIn = (req, res) => {
+  console.log("Session check:", req.session);
+  console.log("User in session:", req.session.user);
+  
   if (!req.session.user) {
+    console.log("No user in session, redirecting to login");
     res.redirect("/login");
     return false;
   }
@@ -19,17 +23,53 @@ const ensureLoggedIn = (req, res) => {
 exports.getCounsellors = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-    const counsellors = await Counsellor.find().populate("bookedBy");
+    const selectedDate = req.query.date || new Date().toISOString().split('T')[0]; // Default to today
+    
+    const counsellors = await Counsellor.find();
+    
+    // Get day of week from the selected date
+    const dateObj = new Date(selectedDate);
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayOfWeek = dayNames[dateObj.getDay()];
+    
+    // Get all bookings for the selected date
+    const bookings = await Booking.find({ 
+      date: { 
+        $gte: new Date(selectedDate), 
+        $lt: new Date(new Date(selectedDate).getTime() + 24 * 60 * 60 * 1000) 
+      },
+      status: 'booked'
+    });
 
-    let bookedCounsellorIds = [];
+    // Create a map of booked slots for each counsellor
+    const bookedSlots = {};
+    bookings.forEach(booking => {
+      const counsellorId = booking.counsellor.toString();
+      if (!bookedSlots[counsellorId]) {
+        bookedSlots[counsellorId] = new Set();
+      }
+      bookedSlots[counsellorId].add(booking.slot);
+    });
+
+    // Get user's bookings for the selected date
+    let userBookings = [];
     if (userId) {
-      const user = await User.findById(userId);
-      bookedCounsellorIds = user?.bookedCounsellors?.map(String) || [];
+      userBookings = await Booking.find({ 
+        user: userId,
+        date: { 
+          $gte: new Date(selectedDate), 
+          $lt: new Date(new Date(selectedDate).getTime() + 24 * 60 * 60 * 1000) 
+        },
+        status: 'booked'
+      });
     }
 
     res.render("User/counsellors", {
       counsellors,
-      bookedCounsellorIds,
+      bookedSlots,
+      userBookings,
+      selectedDate,
+      dayOfWeek,
       user: req.session.user || null,
     });
   } catch (err) {
@@ -44,25 +84,54 @@ exports.getCounsellors = async (req, res) => {
 exports.bookCounsellor = async (req, res) => {
   if (!ensureLoggedIn(req, res)) return;
 
-  const { id, slot } = req.body;
-  if (!id || !slot) return res.status(400).send("Counsellor ID and slot required");
+  const { id, slot, date } = req.body;
+  if (!id || !slot || !date) return res.status(400).send("Counsellor ID, slot, and date required");
 
   try {
-    // Atomically book counsellor if not already booked
-    const counsellor = await Counsellor.findOneAndUpdate(
-      { _id: id, booked: false },
-      { booked: true, selectedSlot: slot, bookedBy: req.session.user._id },
-      { new: true }
-    );
-
-    if (!counsellor) return res.status(400).send("This counsellor is already booked");
+    // Check if counsellor exists and has the requested slot
+    const counsellor = await Counsellor.findById(id);
+    if (!counsellor) return res.status(404).send("Counsellor not found");
     
-    // Add to user's bookedCounsellors
-    await User.findByIdAndUpdate(req.session.user._id, { $push: { bookedCounsellors: counsellor._id } });
+    // Get day of week from the selected date
+    const selectedDate = new Date(date);
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayOfWeek = dayNames[selectedDate.getDay()];
+    
+    // Check if counsellor is available on this day and time
+    const availableSlots = counsellor.weeklySchedule?.[dayOfWeek] || [];
+    if (!availableSlots.includes(slot)) {
+      return res.status(400).send(`Counsellor is not available on ${dayOfWeek} at ${slot}`);
+    }
 
-    res.redirect("/counsellors");
+    // Check if the slot is already booked for the given date
+    const existingBooking = await Booking.findOne({
+      counsellor: id,
+      slot: slot,
+      date: new Date(date),
+      status: 'booked'
+    });
+
+    if (existingBooking) {
+      return res.status(400).send("This slot is already booked for the selected date");
+    }
+
+    // Create new booking
+    const booking = new Booking({
+      counsellor: id,
+      user: req.session.user._id,
+      slot: slot,
+      date: new Date(date),
+      status: 'booked'
+    });
+
+    await booking.save();
+
+    res.redirect(`/counsellors?date=${date}`);
   } catch (err) {
     console.error(err);
+    if (err.code === 11000) {
+      return res.status(400).send("This slot is already booked for the selected date");
+    }
     res.status(500).send("Error booking counsellor");
   }
 };
@@ -70,14 +139,16 @@ exports.bookCounsellor = async (req, res) => {
 // ------------------------------
 // Home route
 // ------------------------------
-// ------------------------------
-// Home route
-// ------------------------------
 exports.getHome = async (req, res) => {
   try {
-    // Fetch logged-in user with booked counsellors
-    const user = await User.findById(req.session.user._id)
-      .populate("bookedCounsellors");
+    // Fetch logged-in user
+    const user = await User.findById(req.session.user._id);
+
+    // Fetch user's active bookings
+    const userBookings = await Booking.find({ 
+      user: req.session.user._id,
+      status: 'booked'
+    }).populate('counsellor');
 
     // Fetch all counsellors for listing
     const counsellors = await Counsellor.find();
@@ -85,7 +156,7 @@ exports.getHome = async (req, res) => {
     res.render("User/home", {
       user,
       counsellors,
-      bookedCounsellors: user?.bookedCounsellors || []
+      userBookings: userBookings || []
     });
   } catch (err) {
     console.error(err);
@@ -97,22 +168,29 @@ exports.getHome = async (req, res) => {
 // ------------------------------
 // Counsellor Dashboard
 // ------------------------------
-// ------------------------------
-// Counsellor Dashboard
-// ------------------------------
 exports.getCounsellorDashboard = async (req, res) => {
   try {
     const counsellorId = req.params.id;
+    const selectedDate = req.query.date || new Date().toISOString().split('T')[0];
 
-    // Fetch counsellor and the user who booked them
-    const counsellor = await Counsellor.findById(counsellorId)
-      .populate("bookedBy"); // bookedBy is a User reference
-
+    // Fetch counsellor
+    const counsellor = await Counsellor.findById(counsellorId);
     if (!counsellor) return res.status(404).send("Counsellor not found");
+
+    // Fetch bookings for this counsellor on the selected date
+    const bookings = await Booking.find({
+      counsellor: counsellorId,
+      date: { 
+        $gte: new Date(selectedDate), 
+        $lt: new Date(new Date(selectedDate).getTime() + 24 * 60 * 60 * 1000) 
+      },
+      status: 'booked'
+    }).populate('user');
 
     res.render("User/counsellorDashboard", {
       counsellor,
-      bookedBy: counsellor.bookedBy || null
+      bookings,
+      selectedDate
     });
   } catch (err) {
     console.error(err);
@@ -126,25 +204,75 @@ exports.getCounsellorDashboard = async (req, res) => {
 exports.markSessionAttended = async (req, res) => {
   if (!ensureLoggedIn(req, res)) return;
 
-  const { id } = req.body; // counsellor id
+  const { bookingId } = req.body;
 
   try {
-    const counsellor = await Counsellor.findById(id);
-    if (!counsellor) return res.status(404).send("Counsellor not found");
+    // Check if user session exists
+    if (!req.session.user || !req.session.user._id) {
+      return res.status(401).send("User session not found. Please login again.");
+    }
 
-    // Reset booking
-    counsellor.attended = true;
-    counsellor.booked = false;
-    counsellor.bookedBy = null;
-    counsellor.selectedSlot = null;
-    await counsellor.save();
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return res.status(404).send("Booking not found");
 
-    // Remove counsellor from user's bookedCounsellors
-    await User.findByIdAndUpdate(req.session.user._id, { $pull: { bookedCounsellors: id } });
+    // Check if the user owns this booking - improved comparison
+    const userId = req.session.user._id.toString();
+    const bookingUserId = booking.user.toString();
+    
+    console.log("User ID from session:", userId);
+    console.log("Booking user ID:", bookingUserId);
+    
+    if (bookingUserId !== userId) {
+      return res.status(403).send("Unauthorized: You can only mark your own bookings as attended");
+    }
+
+    // Mark booking as completed
+    booking.status = 'completed';
+    booking.attended = true;
+    await booking.save();
 
     res.redirect("/home");
   } catch (err) {
-    console.error(err);
+    console.error("Error in markSessionAttended:", err);
     res.status(500).send("Error marking session as attended");
+  }
+};
+
+// ------------------------------
+// Cancel booking
+// ------------------------------
+exports.cancelBooking = async (req, res) => {
+  if (!ensureLoggedIn(req, res)) return;
+
+  const { bookingId } = req.body;
+
+  try {
+    // Check if user session exists
+    if (!req.session.user || !req.session.user._id) {
+      return res.status(401).send("User session not found. Please login again.");
+    }
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return res.status(404).send("Booking not found");
+
+    // Check if the user owns this booking - improved comparison
+    const userId = req.session.user._id.toString();
+    const bookingUserId = booking.user.toString();
+    
+    console.log("User ID from session:", userId);
+    console.log("Booking user ID:", bookingUserId);
+    
+    if (bookingUserId !== userId) {
+      return res.status(403).send("Unauthorized: You can only cancel your own bookings");
+    }
+
+    // Mark booking as cancelled
+    booking.status = 'cancelled';
+    await booking.save();
+
+    res.redirect("/home");
+  } catch (err) {
+    console.error("Error in cancelBooking:", err);
+    res.status(500).send("Error cancelling booking");
   }
 };

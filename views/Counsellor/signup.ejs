@@ -59,10 +59,60 @@
         </select>
       </div>
 
+      <!-- Weekly Schedule -->
       <div>
-        <label class="block text-gray-700 font-medium mb-1">Available Slots (comma separated)</label>
-        <input type="text" name="slots" placeholder="09:00, 10:00, 11:00" required
-               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        <label class="block text-gray-700 font-medium mb-3">Weekly Schedule</label>
+        <div class="space-y-3">
+          <!-- Monday -->
+          <div class="flex items-center space-x-3">
+            <label class="w-20 text-sm font-medium text-gray-600">Monday:</label>
+            <input type="text" name="monday" placeholder="09:00, 10:00, 14:00" 
+                   class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+          </div>
+          
+          <!-- Tuesday -->
+          <div class="flex items-center space-x-3">
+            <label class="w-20 text-sm font-medium text-gray-600">Tuesday:</label>
+            <input type="text" name="tuesday" placeholder="09:00, 10:00, 14:00" 
+                   class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+          </div>
+          
+          <!-- Wednesday -->
+          <div class="flex items-center space-x-3">
+            <label class="w-20 text-sm font-medium text-gray-600">Wednesday:</label>
+            <input type="text" name="wednesday" placeholder="09:00, 10:00, 14:00" 
+                   class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+          </div>
+          
+          <!-- Thursday -->
+          <div class="flex items-center space-x-3">
+            <label class="w-20 text-sm font-medium text-gray-600">Thursday:</label>
+            <input type="text" name="thursday" placeholder="09:00, 10:00, 14:00" 
+                   class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+          </div>
+          
+          <!-- Friday -->
+          <div class="flex items-center space-x-3">
+            <label class="w-20 text-sm font-medium text-gray-600">Friday:</label>
+            <input type="text" name="friday" placeholder="09:00, 10:00, 14:00" 
+                   class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+          </div>
+          
+          <!-- Saturday -->
+          <div class="flex items-center space-x-3">
+            <label class="w-20 text-sm font-medium text-gray-600">Saturday:</label>
+            <input type="text" name="saturday" placeholder="09:00, 10:00, 14:00" 
+                   class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+          </div>
+          
+          <!-- Sunday -->
+          <div class="flex items-center space-x-3">
+            <label class="w-20 text-sm font-medium text-gray-600">Sunday:</label>
+            <input type="text" name="sunday" placeholder="09:00, 10:00, 14:00" 
+                   class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Enter time slots in HH:MM format, separated by commas. Leave empty if not available on that day.</p>
       </div>
 
       <button type="submit"

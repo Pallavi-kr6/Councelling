@@ -25,12 +25,7 @@ router.get('/login', (req, res) => {
 router.post('/login', counsellorController.login);
 
 // Dashboard (protected)
-router.get('/dashboard', (req, res) => {
-  if (!req.session.counsellor) {
-    return res.redirect('/counsellor/login');
-  }
-  res.render("Counsellor/dashboard", { counsellor: req.session.counsellor });
-});
+router.get('/dashboard', counsellorController.dashboard);
 
 // Logout
 router.get('/logout', (req, res) => {

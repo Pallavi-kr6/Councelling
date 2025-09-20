@@ -9,4 +9,5 @@ router.get("/home", counsellorController.getHome);
 router.post("/book", counsellorController.bookCounsellor);
 router.get("/counsellor/:id/dashboard",counsellorController.getCounsellorDashboard);
 router.post("/attended", counsellorController.markSessionAttended);
+router.post("/cancel", counsellorController.cancelBooking);
 module.exports = router;

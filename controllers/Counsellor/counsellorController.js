@@ -1,13 +1,14 @@
 const Counsellor = require('../../models/counsellor');
 const bcrypt = require('bcrypt');
 const User = require('../../models/user'); // needed for populate
+const Booking = require('../../models/Booking');
 
 // ---------------- SIGNUP ----------------
 exports.signup = async (req, res) => {
     try {
-        const { name, email, password, qualifications, specialization, slots } = req.body;
+        const { name, email, password, qualifications, specialization, monday, tuesday, wednesday, thursday, friday, saturday, sunday } = req.body;
 
-        if (!name || !email || !password || !qualifications || !specialization || !slots) {
+        if (!name || !email || !password || !qualifications || !specialization) {
             return res.render("Counsellor/signup", { error: "All fields are required", success: null });
         }
 
@@ -18,8 +19,32 @@ exports.signup = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Convert slots string into array (trim spaces)
-        const slotsArray = slots.split(',').map(s => s.trim());
+        // Helper function to parse time slots
+        const parseTimeSlots = (timeString) => {
+            if (!timeString || timeString.trim() === '') return [];
+            return timeString.split(',').map(s => s.trim()).filter(s => s !== '');
+        };
+
+        // Build weekly schedule
+        const weeklySchedule = {
+            monday: parseTimeSlots(monday),
+            tuesday: parseTimeSlots(tuesday),
+            wednesday: parseTimeSlots(wednesday),
+            thursday: parseTimeSlots(thursday),
+            friday: parseTimeSlots(friday),
+            saturday: parseTimeSlots(saturday),
+            sunday: parseTimeSlots(sunday),
+        };
+
+        // Get all unique slots for backward compatibility
+        const allSlots = [];
+        Object.values(weeklySchedule).forEach(daySlots => {
+            daySlots.forEach(slot => {
+                if (!allSlots.includes(slot)) {
+                    allSlots.push(slot);
+                }
+            });
+        });
 
         const counsellor = new Counsellor({
             name,
@@ -27,7 +52,8 @@ exports.signup = async (req, res) => {
             password: hashedPassword,
             qualifications,
             specialization,
-            slots: slotsArray,
+            weeklySchedule,
+            slots: allSlots, // Keep for backward compatibility
         });
 
         await counsellor.save();
@@ -45,7 +71,7 @@ exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const counsellor = await Counsellor.findOne({ email }).populate('bookedBy');
+        const counsellor = await Counsellor.findOne({ email });
 
         if (!counsellor) {
             return res.render("Counsellor/login", { error: "Counsellor not found", success: null });
@@ -58,12 +84,55 @@ exports.login = async (req, res) => {
 
         req.session.counsellor = counsellor;
 
-        // bookedBy is either a User object or null
+        // Fetch all bookings for this counsellor
+        const selectedDate = req.query.date || new Date().toISOString().split('T')[0];
+        
+        const bookings = await Booking.find({
+            counsellor: counsellor._id,
+            date: { 
+                $gte: new Date(selectedDate), 
+                $lt: new Date(new Date(selectedDate).getTime() + 24 * 60 * 60 * 1000) 
+            },
+            status: 'booked'
+        }).populate('user');
+
         res.render("Counsellor/dashboard", { 
-            bookedBy: counsellor.bookedBy || null,
-            counsellor
+            counsellor,
+            bookings,
+            selectedDate
         });
 
+    } catch (err) {
+        console.error(err);
+        res.status(500).render("Counsellor/login", { error: "Server error, please try again", success: null });
+    }
+};
+
+// ---------------- DASHBOARD ----------------
+exports.dashboard = async (req, res) => {
+    try {
+        if (!req.session.counsellor) {
+            return res.redirect('/counsellor/login');
+        }
+
+        const counsellor = req.session.counsellor;
+        const selectedDate = req.query.date || new Date().toISOString().split('T')[0];
+        
+        // Fetch all bookings for this counsellor
+        const bookings = await Booking.find({
+            counsellor: counsellor._id,
+            date: { 
+                $gte: new Date(selectedDate), 
+                $lt: new Date(new Date(selectedDate).getTime() + 24 * 60 * 60 * 1000) 
+            },
+            status: 'booked'
+        }).populate('user');
+
+        res.render("Counsellor/dashboard", { 
+            counsellor,
+            bookings,
+            selectedDate
+        });
     } catch (err) {
         console.error(err);
         res.status(500).render("Counsellor/login", { error: "Server error, please try again", success: null });

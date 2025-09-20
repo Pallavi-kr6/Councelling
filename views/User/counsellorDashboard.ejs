@@ -18,47 +18,71 @@
       <p class="text-gray-600 dark:text-gray-300 mt-1"><strong>Qualification:</strong> <%= counsellor.qualifications %></p>
       <p class="text-gray-600 dark:text-gray-300 mt-1"><strong>Specialization:</strong> <%= counsellor.specialization.charAt(0).toUpperCase() + counsellor.specialization.slice(1) %></p>
       <p class="text-gray-600 dark:text-gray-300 mt-1"><strong>Available Slots:</strong> <%= counsellor.slots.join(", ") %></p>
+      
+      <!-- Date Selector -->
+      <div class="mt-4">
+        <label for="date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Date:</label>
+        <input type="date" 
+               id="date" 
+               name="date" 
+               value="<%= selectedDate %>"
+               class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+               onchange="window.location.href='/counsellors/counsellor/<%= counsellor._id %>/dashboard?date=' + this.value">
+      </div>
     </header>
 
-    <!-- Patients Section -->
+    <!-- Bookings Section -->
     <section class="mb-8 ">
-      <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Booked Patients</h2>
+      <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Bookings for <%= new Date(selectedDate).toLocaleDateString() %></h2>
       
-      <% if(counsellor.bookedBy) { %>
-        <ul class="space-y-3">
-          <li class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex justify-between items-center">
-            <div>
-              <span class="font-medium text-gray-900 dark:text-gray-100"><%= counsellor.bookedBy.name %></span>
-              <span class="text-gray-600 dark:text-gray-300 ml-2">(<%= counsellor.bookedBy.email %>)</span>
+      <% if(bookings && bookings.length > 0) { %>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <% bookings.forEach(booking => { %>
+            <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div class="flex justify-between items-start mb-2">
+                <div>
+                  <span class="font-medium text-gray-900 dark:text-gray-100"><%= booking.user.name %></span>
+                  <span class="text-gray-600 dark:text-gray-300 ml-2">(<%= booking.user.email %>)</span>
+                </div>
+                <span class="px-2 py-1 bg-blue-600 text-white rounded-full text-xs">Booked</span>
+              </div>
+              <div class="text-sm text-gray-700 dark:text-gray-200">
+                <p><strong>Slot:</strong> <%= booking.slot %></p>
+                <p><strong>Date:</strong> <%= new Date(booking.date).toLocaleDateString() %></p>
+                <p><strong>Status:</strong> 
+                  <% if(booking.attended) { %>
+                    <span class="text-green-600">Attended</span>
+                  <% } else { %>
+                    <span class="text-yellow-600">Upcoming</span>
+                  <% } %>
+                </p>
+              </div>
             </div>
-            <div class="text-sm">
-              <span class="text-gray-700 dark:text-gray-200"><strong>Slot:</strong> <%= counsellor.selectedSlot %></span>
-              <% if(counsellor.attended) { %>
-                <span class="ml-3 px-2 py-1 bg-green-600 text-white rounded-full text-xs">Attended</span>
-              <% } else { %>
-                <span class="ml-3 px-2 py-1 bg-yellow-500 text-white rounded-full text-xs">Upcoming</span>
-              <% } %>
-            </div>
-          </li>
-        </ul>
+          <% }) %>
+        </div>
       <% } else { %>
-        <p class="text-gray-500 dark:text-gray-400">No patients booked yet</p>
+        <p class="text-gray-500 dark:text-gray-400">No bookings for this date</p>
       <% } %>
     </section>
 
-    <!-- Actions -->
+    <!-- Slot Availability -->
     <section>
-      <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Actions</h2>
-      <% if(counsellor.booked && !counsellor.attended) { %>
-        <form action="/counsellors/mark-attended" method="POST" class="space-y-2">
-          <input type="hidden" name="id" value="<%= counsellor._id %>">
-          <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-sm transition">
-            Mark Session as Attended
-          </button>
-        </form>
-      <% } else { %>
-        <p class="text-gray-500 dark:text-gray-400">No actions available</p>
-      <% } %>
+      <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Slot Availability for <%= new Date(selectedDate).toLocaleDateString() %></h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <% counsellor.slots.forEach(slot => { %>
+          <% 
+            const isBooked = bookings.some(b => b.slot === slot);
+          %>
+          <div class="p-3 rounded-lg border text-center
+                      <%= isBooked ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-200' 
+                        : 'bg-green-100 border-green-300 text-green-800 dark:bg-green-900 dark:border-green-700 dark:text-green-200' %>">
+            <div class="font-medium"><%= slot %></div>
+            <div class="text-xs mt-1">
+              <%= isBooked ? 'Booked' : 'Available' %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
     </section>
 
   </div>

@@ -3,6 +3,7 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const Counsellor = require('../../models/counsellor');  // ✅ Model
+const Booking = require('../../models/Booking');
 
 
 
@@ -149,8 +150,18 @@ exports.login = async (req, res) => {
     // 4. Fetch counsellors from DB
     const counsellors = await Counsellor.find();
 
-    // 5. Pass both user + counsellors to EJS
-    res.render("User/home", { user: req.session.user, counsellors });
+    // 5. Fetch user's active bookings
+    const userBookings = await Booking.find({ 
+      user: user._id,
+      status: 'booked'
+    }).populate('counsellor');
+
+    // 6. Pass user, counsellors, and userBookings to EJS
+    res.render("User/home", { 
+      user: req.session.user, 
+      counsellors,
+      userBookings: userBookings || []
+    });
 
   } catch (err) {
     console.error(err);
