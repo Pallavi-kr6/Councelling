@@ -29,6 +29,36 @@ const bookingSchema = new mongoose.Schema(
       enum: ['booked', 'completed', 'cancelled'],
       default: 'booked',
     },
+    zoomMeeting: {
+      meetingId: {
+        type: String,
+        default: null
+      },
+      joinUrl: {
+        type: String,
+        default: null
+      },
+      startUrl: {
+        type: String,
+        default: null
+      },
+      password: {
+        type: String,
+        default: null
+      },
+      topic: {
+        type: String,
+        default: null
+      }
+    },
+    meetingScheduled: {
+      type: Boolean,
+      default: false
+    },
+    emailSent: {
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true }
 );

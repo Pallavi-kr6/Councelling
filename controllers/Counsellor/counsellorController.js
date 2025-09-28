@@ -94,7 +94,10 @@ exports.login = async (req, res) => {
                 $lt: new Date(new Date(selectedDate).getTime() + 24 * 60 * 60 * 1000) 
             },
             status: 'booked'
-        }).populate('user');
+        }).populate({
+            path: 'user',
+            select: 'name email Instagram course year'
+        });
 
         res.render("Counsellor/dashboard", { 
             counsellor,
@@ -126,9 +129,13 @@ exports.dashboard = async (req, res) => {
                 $lt: new Date(new Date(selectedDate).getTime() + 24 * 60 * 60 * 1000) 
             },
             status: 'booked'
-        }).populate('user');
+        }).populate({
+            path: 'user',
+            select: 'name email Instagram course year'
+        });
 
         res.render("Counsellor/dashboard", { 
+           
             counsellor,
             bookings,
             selectedDate

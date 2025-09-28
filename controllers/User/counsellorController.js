@@ -1,6 +1,8 @@
 const Counsellor = require('../../models/counsellor');
 const User = require("../../models/user");
 const Booking = require("../../models/Booking");
+const zoomService = require('../../services/zoomService');
+const emailService = require('../../services/emailService');
 
 // ------------------------------
 // Helper to ensure user is logged in
@@ -71,6 +73,7 @@ exports.getCounsellors = async (req, res) => {
       selectedDate,
       dayOfWeek,
       user: req.session.user || null,
+      success: req.query.success || null,
     });
   } catch (err) {
     console.error(err);
@@ -108,25 +111,98 @@ exports.bookCounsellor = async (req, res) => {
       counsellor: id,
       slot: slot,
       date: new Date(date),
-      status: 'booked'
+      status: { $in: ['booked', 'completed'] } // Check both booked and completed statuses
     });
 
     if (existingBooking) {
       return res.status(400).send("This slot is already booked for the selected date");
     }
 
-    // Create new booking
-    const booking = new Booking({
+    // Additional check: Check if user already has a booking for this counsellor on this date
+    const userExistingBooking = await Booking.findOne({
       counsellor: id,
       user: req.session.user._id,
-      slot: slot,
       date: new Date(date),
-      status: 'booked'
+      status: { $in: ['booked', 'completed'] }
     });
 
-    await booking.save();
+    if (userExistingBooking) {
+      return res.status(400).send("You already have a booking with this counsellor on this date");
+    }
 
-    res.redirect(`/counsellors?date=${date}`);
+    // Create new booking with error handling for duplicate key
+    let booking;
+    try {
+      booking = new Booking({
+        counsellor: id,
+        user: req.session.user._id,
+        slot: slot,
+        date: new Date(date),
+        status: 'booked'
+      });
+
+      await booking.save();
+    } catch (saveError) {
+      if (saveError.code === 11000) {
+        return res.status(400).send("This slot is already booked for the selected date");
+      }
+      throw saveError; // Re-throw if it's not a duplicate key error
+    }
+
+    // Create Zoom meeting for the booking
+    try {
+      const user = await User.findById(req.session.user._id);
+      const meetingTopic = `Counseling Session - ${user.name} with ${counsellor.name}`;
+      
+      // Create meeting date and time
+      const meetingDateTime = new Date(date);
+      const [hours, minutes] = slot.split(':');
+      meetingDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
+      const zoomResult = await zoomService.createMeeting(
+        meetingTopic,
+        meetingDateTime.toISOString(),
+        60, // 60 minutes duration
+        null // No password for now
+      );
+
+      if (zoomResult.success) {
+        // Update booking with Zoom meeting details
+        booking.zoomMeeting = {
+          meetingId: zoomResult.meeting.id,
+          joinUrl: zoomResult.meeting.join_url,
+          startUrl: zoomResult.meeting.start_url,
+          password: zoomResult.meeting.password,
+          topic: zoomResult.meeting.topic
+        };
+        booking.meetingScheduled = true;
+        await booking.save();
+
+        // Send email notifications with Zoom meeting details
+        const emailResult = await emailService.sendMeetingNotification(user, counsellor, booking, zoomResult.meeting);
+        
+        if (emailResult.success) {
+          booking.emailSent = true;
+          await booking.save();
+        }
+      } else {
+        console.error('Failed to create Zoom meeting:', zoomResult.error);
+        // Send basic booking confirmation without Zoom details
+        await emailService.sendBookingConfirmation(user, counsellor, booking);
+      }
+    } catch (zoomError) {
+      console.error('Error creating Zoom meeting or sending emails:', zoomError);
+      // Send basic booking confirmation as fallback
+      try {
+        const user = await User.findById(req.session.user._id);
+        await emailService.sendBookingConfirmation(user, counsellor, booking);
+      } catch (emailError) {
+        console.error('Error sending fallback email:', emailError);
+      }
+    }
+
+    // Redirect with success message
+    res.redirect(`/counsellors?date=${date}&success=Meeting scheduled and email sent!`);
   } catch (err) {
     console.error(err);
     if (err.code === 11000) {
@@ -185,7 +261,10 @@ exports.getCounsellorDashboard = async (req, res) => {
         $lt: new Date(new Date(selectedDate).getTime() + 24 * 60 * 60 * 1000) 
       },
       status: 'booked'
-    }).populate('user');
+    }).populate({
+      path: 'user',
+      select: 'name email Instagram course year'
+    });
 
     res.render("User/counsellorDashboard", {
       counsellor,
