@@ -9,6 +9,7 @@ const authRoutes = require('./routes/User/authRoutes');
 const counsellorController = require("./controllers/User/counsellorController");
 const chatRoutes = require("./routes/User/chatRoutes");
 const counsellorAuthRoutes = require("./routes/Counsellor/counsellorRoutes");
+const moodRoutes = require("./routes/User/moodRoutes");
 
 
 // Connect to MongoDB
@@ -40,6 +41,7 @@ app.use('/counsellors', counsellorRoutes);
 app.get("/home", counsellorController.getHome);
 app.use("/api", chatRoutes);
 app.use("/counsellor", counsellorAuthRoutes);
+app.use("/mood", moodRoutes);
 // app.use("/", counsellorRoutes);
 // Start server
 const PORT = process.env.PORT || 3000;

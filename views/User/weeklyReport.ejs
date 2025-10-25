@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weekly Mood Report</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="flex min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+
+  <!-- Include Navbar -->
+  <%- include("../partials/navbar") %>
+
+  <!-- Main content -->
+  <main class="flex-1 ml-0 md:ml-64 p-6 md:p-10">
+    <header class="bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl shadow-md p-6 mb-8 text-white">
+      <h1 class="text-3xl font-bold mb-2">📊 Weekly Mood Report</h1>
+      <p class="text-purple-100">Your personalized mental health insights for the week</p>
+      <p class="text-sm text-purple-200 mt-2">
+        <%= report.weekStart %> - <%= report.weekEnd %>
+      </p>
+    </header>
+
+    <!-- Weekly Statistics -->
+    <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+      <h2 class="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">📈 This Week's Performance</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-blue-800 dark:text-blue-200">😊 Mood</h3>
+            <span class="text-3xl">😊</span>
+          </div>
+          <p class="text-4xl font-bold text-blue-600 mb-2"><%= report.stats.avgMood %></p>
+          <p class="text-sm text-blue-700 dark:text-blue-300">Average this week</p>
+        </div>
+        
+        <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-green-800 dark:text-green-200">⚡ Energy</h3>
+            <span class="text-3xl">⚡</span>
+          </div>
+          <p class="text-4xl font-bold text-green-600 mb-2"><%= report.stats.avgEnergy %></p>
+          <p class="text-sm text-green-700 dark:text-green-300">Average this week</p>
+        </div>
+        
+        <div class="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-red-800 dark:text-red-200">😌 Stress</h3>
+            <span class="text-3xl">😌</span>
+          </div>
+          <p class="text-4xl font-bold text-red-600 mb-2"><%= report.stats.avgStress %></p>
+          <p class="text-sm text-red-700 dark:text-red-300">Average this week</p>
+        </div>
+        
+        <div class="bg-purple-50 dark:bg-purple-900/20 p-6 rounded-lg">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-purple-800 dark:text-purple-200">💤 Sleep</h3>
+            <span class="text-3xl">💤</span>
+          </div>
+          <p class="text-4xl font-bold text-purple-600 mb-2"><%= report.stats.avgSleep %></p>
+          <p class="text-sm text-purple-700 dark:text-purple-300">Average this week</p>
+        </div>
+        
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 p-6 rounded-lg">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-yellow-800 dark:text-yellow-200">👥 Social</h3>
+            <span class="text-3xl">👥</span>
+          </div>
+          <p class="text-4xl font-bold text-yellow-600 mb-2"><%= report.stats.avgSocial %></p>
+          <p class="text-sm text-yellow-700 dark:text-yellow-300">Average this week</p>
+        </div>
+        
+        <div class="bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 p-6 rounded-lg">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-pink-800 dark:text-pink-200">🌟 Wellbeing</h3>
+            <span class="text-3xl">🌟</span>
+          </div>
+          <p class="text-4xl font-bold text-pink-600 mb-2"><%= report.stats.avgWellbeing %></p>
+          <p class="text-sm text-pink-700 dark:text-pink-300">Overall score</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Insights -->
+    <% if (report.insights && report.insights.length > 0) { %>
+      <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">💡 Insights</h2>
+        
+        <div class="space-y-4">
+          <% report.insights.forEach(insight => { %>
+            <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-r-lg">
+              <p class="text-blue-800 dark:text-blue-200 font-medium"><%= insight %></p>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+
+    <!-- Recommendations -->
+    <% if (report.recommendations && report.recommendations.length > 0) { %>
+      <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">🎯 Recommendations</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <% report.recommendations.forEach((recommendation, index) => { %>
+            <div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4 rounded-r-lg">
+              <div class="flex items-start">
+                <span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">
+                  <%= index + 1 %>
+                </span>
+                <p class="text-green-800 dark:text-green-200"><%= recommendation %></p>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+
+    <!-- Weekly Chart -->
+    <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+      <h2 class="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">📊 Weekly Trends</h2>
+      
+      <div class="h-96">
+        <canvas id="weeklyChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Daily Breakdown -->
+    <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+      <h2 class="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">📅 Daily Breakdown</h2>
+      
+      <% if (weeklyData && weeklyData.length > 0) { %>
+        <div class="space-y-4">
+          <% weeklyData.forEach(mood => { %>
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold text-gray-900 dark:text-white">
+                  <%= new Date(mood.date).toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    month: 'short', 
+                    day: 'numeric' 
+                  }) %>
+                </h3>
+                <div class="text-right">
+                  <span class="text-sm text-gray-500">Wellbeing</span>
+                  <p class="text-2xl font-bold text-blue-600"><%= mood.wellbeingScore %></p>
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-5 gap-4">
+                <div class="text-center">
+                  <div class="text-2xl mb-1"><%= mood.getMoodEmoji() %></div>
+                  <div class="text-sm text-gray-600 dark:text-gray-400">Mood</div>
+                  <div class="font-bold text-blue-600"><%= mood.mood %></div>
+                </div>
+                
+                <div class="text-center">
+                  <div class="text-2xl mb-1"><%= mood.getEnergyEmoji() %></div>
+                  <div class="text-sm text-gray-600 dark:text-gray-400">Energy</div>
+                  <div class="font-bold text-green-600"><%= mood.energy %></div>
+                </div>
+                
+                <div class="text-center">
+                  <div class="text-2xl mb-1"><%= mood.getStressEmoji() %></div>
+                  <div class="text-sm text-gray-600 dark:text-gray-400">Stress</div>
+                  <div class="font-bold text-red-600"><%= mood.stress %></div>
+                </div>
+                
+                <div class="text-center">
+                  <div class="text-2xl mb-1">💤</div>
+                  <div class="text-sm text-gray-600 dark:text-gray-400">Sleep</div>
+                  <div class="font-bold text-purple-600"><%= mood.sleep %></div>
+                </div>
+                
+                <div class="text-center">
+                  <div class="text-2xl mb-1">👥</div>
+                  <div class="text-sm text-gray-600 dark:text-gray-400">Social</div>
+                  <div class="font-bold text-yellow-600"><%= mood.social %></div>
+                </div>
+              </div>
+              
+              <% if (mood.notes) { %>
+                <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg mt-3">
+                  <p class="text-gray-700 dark:text-gray-300 text-sm"><%= mood.notes %></p>
+                </div>
+              <% } %>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="text-center py-12">
+          <div class="text-6xl mb-4">📊</div>
+          <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">No data for this week</h3>
+          <p class="text-gray-500 dark:text-gray-500">Start tracking your mood to generate reports!</p>
+          <a href="/mood" class="inline-block mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+            Start Tracking
+          </a>
+        </div>
+      <% } %>
+    </section>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row gap-4">
+      <a href="/mood" 
+         class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition text-center">
+        📝 Add Today's Mood
+      </a>
+      <a href="/mood/history" 
+         class="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition text-center">
+        📈 View History
+      </a>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script>
+    // Create weekly chart
+    const ctx = document.getElementById('weeklyChart').getContext('2d');
+    const weeklyData = <%- JSON.stringify(weeklyData.map(mood => ({
+      date: new Date(mood.date).toLocaleDateString(),
+      mood: mood.mood,
+      energy: mood.energy,
+      stress: mood.stress,
+      sleep: mood.sleep,
+      social: mood.social,
+      wellbeing: mood.wellbeingScore
+    }))) %>;
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: weeklyData.map(d => d.date),
+        datasets: [
+          {
+            label: 'Mood',
+            data: weeklyData.map(d => d.mood),
+            borderColor: 'rgb(59, 130, 246)',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4
+          },
+          {
+            label: 'Energy',
+            data: weeklyData.map(d => d.energy),
+            borderColor: 'rgb(34, 197, 94)',
+            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+            tension: 0.4
+          },
+          {
+            label: 'Stress',
+            data: weeklyData.map(d => d.stress),
+            borderColor: 'rgb(239, 68, 68)',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            tension: 0.4
+          },
+          {
+            label: 'Sleep',
+            data: weeklyData.map(d => d.sleep),
+            borderColor: 'rgb(147, 51, 234)',
+            backgroundColor: 'rgba(147, 51, 234, 0.1)',
+            tension: 0.4
+          },
+          {
+            label: 'Social',
+            data: weeklyData.map(d => d.social),
+            borderColor: 'rgb(234, 179, 8)',
+            backgroundColor: 'rgba(234, 179, 8, 0.1)',
+            tension: 0.4
+          },
+          {
+            label: 'Wellbeing Score',
+            data: weeklyData.map(d => d.wellbeing),
+            borderColor: 'rgb(236, 72, 153)',
+            backgroundColor: 'rgba(236, 72, 153, 0.1)',
+            tension: 0.4,
+            borderWidth: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 10,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: 'Your Weekly Mood Journey'
+          }
+        }
+      }
+    });
+
+    // Dark mode toggle
+    window.toggleDarkMode = function () {
+      const isDark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    };
+
+    // Apply saved theme
+    (function applySavedTheme() {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    })();
+  </script>
+</body>
+</html>

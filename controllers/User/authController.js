@@ -11,8 +11,8 @@ const Booking = require('../../models/Booking');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'pk2239@srmist.edu.in',   // sender email
-    pass: 'qhjcrtarcwrtmfju'       // replace with Gmail App Password
+    user: 'pallavisingh1536@gmail.com',   // sender email
+    pass: 'lcxa dwuj epwj zpwv'       // Gmail App Password
   }
 });
 
@@ -57,7 +57,7 @@ exports.register = async (req, res) => {
     await user.save();
 
     await transporter.sendMail({
-      from: 'pk2239@srmist.edu.in',
+      from: 'pallavisingh1536@gmail.com',
       to: normalizedEmail,
       subject: 'Verify your email',
       text: `Your OTP is ${otp}. It is valid for 5 minutes.`
@@ -110,7 +110,7 @@ exports.resendOTP = async (req, res) => {
     await user.save();
 
     await transporter.sendMail({
-      from: 'pk2239@srmist.edu.in',
+      from: 'pallavisingh1536@gmail.com',
       to: email,
       subject: 'Resend OTP',
       text: `Your new OTP is ${otp}. It is valid for 5 minutes.`

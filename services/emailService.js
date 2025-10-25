@@ -5,8 +5,8 @@ class EmailService {
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'pk2239@srmist.edu.in',
-        pass: 'qhjcrtarcwrtmfju'
+        user: 'pallavisingh1536@gmail.com',
+        pass: 'lcxa dwuj epwj zpwv'
       }
     });
   }
@@ -19,7 +19,7 @@ class EmailService {
       
       // Email to User
       const userEmailContent = {
-        from: 'pk2239@srmist.edu.in',
+        from: 'pallavisingh1536@gmail.com',
         to: user.email,
         subject: `Your Counseling Session with ${counsellor.name} - Zoom Meeting Details`,
         html: `
@@ -74,7 +74,7 @@ class EmailService {
 
       // Email to Counsellor
       const counsellorEmailContent = {
-        from: 'pk2239@srmist.edu.in',
+        from: 'pallavisingh1536@gmail.com',
         to: counsellor.email,
         subject: `New Counseling Session Booking - Zoom Meeting Details`,
         html: `
@@ -145,7 +145,7 @@ class EmailService {
       const meetingTime = booking.slot;
       
       const emailContent = {
-        from: 'pk2239@srmist.edu.in',
+        from: 'pallavisingh1536@gmail.com',
         to: user.email,
         subject: `Your Counseling Session with ${counsellor.name} - Booking Confirmed`,
         html: `

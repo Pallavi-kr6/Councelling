@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mood & Wellbeing Tracking</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="flex min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+
+  <!-- Include Navbar -->
+  <%- include("../partials/navbar") %>
+
+  <!-- Main content -->
+  <main class="flex-1 ml-0 md:ml-64 p-6 md:p-10">
+    <header class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-md p-6 mb-8 text-white">
+      <h1 class="text-3xl font-bold mb-2">Mood & Wellbeing Tracking</h1>
+      <p class="text-blue-100">Track your daily mood and mental health progress</p>
+    </header>
+
+    <!-- Today's Mood Entry -->
+    <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+      <h2 class="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">How are you feeling today?</h2>
+      
+      <form id="moodForm" class="space-y-6">
+        <!-- Mood Slider -->
+        <div class="space-y-3">
+          <label class="block text-lg font-medium text-gray-700 dark:text-gray-300">
+            😊 Mood: <span id="moodValue" class="text-blue-600 font-bold">5</span>
+          </label>
+          <input type="range" id="mood" name="mood" min="1" max="10" value="5" 
+                 class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+          <div class="flex justify-between text-sm text-gray-500">
+            <span>😢 Very Low</span>
+            <span>😐 Neutral</span>
+            <span>🥳 Very High</span>
+          </div>
+        </div>
+
+        <!-- Energy Slider -->
+        <div class="space-y-3">
+          <label class="block text-lg font-medium text-gray-700 dark:text-gray-300">
+            ⚡ Energy: <span id="energyValue" class="text-green-600 font-bold">5</span>
+          </label>
+          <input type="range" id="energy" name="energy" min="1" max="10" value="5" 
+                 class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+          <div class="flex justify-between text-sm text-gray-500">
+            <span>😴 Very Low</span>
+            <span>😐 Neutral</span>
+            <span>🔥 Very High</span>
+          </div>
+        </div>
+
+        <!-- Stress Slider -->
+        <div class="space-y-3">
+          <label class="block text-lg font-medium text-gray-700 dark:text-gray-300">
+            😌 Stress: <span id="stressValue" class="text-red-600 font-bold">5</span>
+          </label>
+          <input type="range" id="stress" name="stress" min="1" max="10" value="5" 
+                 class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+          <div class="flex justify-between text-sm text-gray-500">
+            <span>😌 Very Low</span>
+            <span>😐 Neutral</span>
+            <span>💥 Very High</span>
+          </div>
+        </div>
+
+        <!-- Sleep Slider -->
+        <div class="space-y-3">
+          <label class="block text-lg font-medium text-gray-700 dark:text-gray-300">
+            💤 Sleep Quality: <span id="sleepValue" class="text-purple-600 font-bold">5</span>
+          </label>
+          <input type="range" id="sleep" name="sleep" min="1" max="10" value="5" 
+                 class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+          <div class="flex justify-between text-sm text-gray-500">
+            <span>😴 Poor</span>
+            <span>😐 Average</span>
+            <span>😴 Excellent</span>
+          </div>
+        </div>
+
+        <!-- Social Slider -->
+        <div class="space-y-3">
+          <label class="block text-lg font-medium text-gray-700 dark:text-gray-300">
+            👥 Social Connection: <span id="socialValue" class="text-yellow-600 font-bold">5</span>
+          </label>
+          <input type="range" id="social" name="social" min="1" max="10" value="5" 
+                 class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+          <div class="flex justify-between text-sm text-gray-500">
+            <span>😔 Isolated</span>
+            <span>😐 Neutral</span>
+            <span>🤗 Connected</span>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="space-y-3">
+          <label class="block text-lg font-medium text-gray-700 dark:text-gray-300">
+            📝 Notes (optional)
+          </label>
+          <textarea id="notes" name="notes" rows="3" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    placeholder="How are you feeling? What's on your mind?"></textarea>
+        </div>
+
+        <!-- Tags -->
+        <div class="space-y-3">
+          <label class="block text-lg font-medium text-gray-700 dark:text-gray-300">
+            🏷️ Tags (comma-separated)
+          </label>
+          <input type="text" id="tags" name="tags" 
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                 placeholder="e.g., happy, anxious, motivated, tired">
+          <p class="text-sm text-gray-500">Available tags: anxious, happy, sad, angry, excited, calm, overwhelmed, focused, tired, motivated, lonely, grateful, frustrated, peaceful, confused, hopeful</p>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" 
+                class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition duration-300">
+          💾 Save Today's Mood
+        </button>
+      </form>
+
+      <!-- Success Message -->
+      <div id="successMessage" class="hidden mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          </svg>
+          <span class="font-medium">Mood saved successfully!</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Weekly Overview -->
+    <% if (weeklyStats && weeklyStats.totalEntries > 0) { %>
+      <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">📊 This Week's Overview</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+            <h3 class="font-semibold text-blue-800 dark:text-blue-200 mb-2">😊 Average Mood</h3>
+            <p class="text-3xl font-bold text-blue-600"><%= weeklyStats.avgMood %></p>
+          </div>
+          
+          <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+            <h3 class="font-semibold text-green-800 dark:text-green-200 mb-2">⚡ Average Energy</h3>
+            <p class="text-3xl font-bold text-green-600"><%= weeklyStats.avgEnergy %></p>
+          </div>
+          
+          <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+            <h3 class="font-semibold text-red-800 dark:text-red-200 mb-2">😌 Average Stress</h3>
+            <p class="text-3xl font-bold text-red-600"><%= weeklyStats.avgStress %></p>
+          </div>
+          
+          <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+            <h3 class="font-semibold text-purple-800 dark:text-purple-200 mb-2">💤 Average Sleep</h3>
+            <p class="text-3xl font-bold text-purple-600"><%= weeklyStats.avgSleep %></p>
+          </div>
+          
+          <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+            <h3 class="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">👥 Average Social</h3>
+            <p class="text-3xl font-bold text-yellow-600"><%= weeklyStats.avgSocial %></p>
+          </div>
+          
+          <div class="bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 p-4 rounded-lg">
+            <h3 class="font-semibold text-pink-800 dark:text-pink-200 mb-2">🌟 Wellbeing Score</h3>
+            <p class="text-3xl font-bold text-pink-600"><%= weeklyStats.avgWellbeing %></p>
+          </div>
+        </div>
+      </section>
+    <% } %>
+
+    <!-- Recent Entries -->
+    <% if (recentMoods && recentMoods.length > 0) { %>
+      <section class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">📅 Recent Entries</h2>
+        
+        <div class="space-y-4">
+          <% recentMoods.forEach(mood => { %>
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              <div class="flex justify-between items-start mb-2">
+                <h3 class="font-semibold text-gray-900 dark:text-white">
+                  <%= new Date(mood.date).toLocaleDateString() %>
+                </h3>
+                <span class="text-sm text-gray-500">
+                  Wellbeing: <span class="font-bold text-blue-600"><%= mood.wellbeingScore %></span>
+                </span>
+              </div>
+              
+              <div class="flex items-center space-x-4 text-sm">
+                <span>😊 <%= mood.mood %></span>
+                <span>⚡ <%= mood.energy %></span>
+                <span>😌 <%= mood.stress %></span>
+                <span>💤 <%= mood.sleep %></span>
+                <span>👥 <%= mood.social %></span>
+              </div>
+              
+              <% if (mood.notes) { %>
+                <p class="text-gray-600 dark:text-gray-400 mt-2 text-sm"><%= mood.notes %></p>
+              <% } %>
+              
+              <% if (mood.tags && mood.tags.length > 0) { %>
+                <div class="flex flex-wrap gap-1 mt-2">
+                  <% mood.tags.forEach(tag => { %>
+                    <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                      <%= tag %>
+                    </span>
+                  <% }) %>
+                </div>
+              <% } %>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row gap-4">
+      <a href="/mood/history" 
+         class="flex-1 bg-gray-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-700 transition text-center">
+        📈 View History
+      </a>
+      <a href="/mood/report" 
+         class="flex-1 bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 transition text-center">
+        📊 Weekly Report
+      </a>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script>
+    // Update slider values in real-time
+    document.querySelectorAll('.slider').forEach(slider => {
+      slider.addEventListener('input', function() {
+        const valueSpan = document.getElementById(this.id + 'Value');
+        if (valueSpan) {
+          valueSpan.textContent = this.value;
+        }
+      });
+    });
+
+    // Handle form submission
+    document.getElementById('moodForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData);
+      
+      try {
+        const response = await fetch('/mood/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          document.getElementById('successMessage').classList.remove('hidden');
+          setTimeout(() => {
+            location.reload();
+          }, 2000);
+        } else {
+          alert('Error saving mood entry: ' + result.error);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error saving mood entry');
+      }
+    });
+
+    // Dark mode toggle
+    window.toggleDarkMode = function () {
+      const isDark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    };
+
+    // Apply saved theme
+    (function applySavedTheme() {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    })();
+  </script>
+</body>
+</html>
